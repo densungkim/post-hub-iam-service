@@ -161,7 +161,7 @@ mvn test
 
 ## Ports (defaults)
 
-* iam-service: **8189**
+* IAM-Service: **8189**
 * PostgreSQL: **5432**
 * Kafka: **9092**
 * Consul: **8500**
