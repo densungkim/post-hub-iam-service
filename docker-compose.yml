@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:17.6
+    container_name: postgres
+    environment:
+      POSTGRES_DB: post_hub_local
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  kafka:
+    image: apache/kafka:4.1.0
+    container_name: kafka-app
+    ports:
+      - "9092:9092"   # client (PLAINTEXT)
+      - "9093:9093"   # controller (KRaft)
+    environment:
+      # KRaft + single-node broker/controller
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+
+      # listeners
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092 # if you run app in container change to 'kafka-app:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+      # for single-node cluster
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - app-network
+
+  consul:
+    image: consul:1.15.4
+    container_name: consul-app
+    restart: always
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: agent -server -ui -bootstrap-expect=1 -client=0.0.0.0
+    volumes:
+      - consul_data:/consul/data
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    name: postgres_data
+  kafka_data:
+    name: kafka_data
+  consul_data:
+    name: consul_data
+
+networks:
+  app-network:
+    driver: bridge
+    name: app-network

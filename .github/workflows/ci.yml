@@ -1,0 +1,215 @@
+name: CI/CD — Docker over SSH
+
+on:
+  pull_request:
+    branches: [ '**' ]
+  push:
+    branches: [ 'main', 'master' ]
+
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: "Run tests"
+        type: boolean
+        default: false
+      run_build_jar:
+        description: "Build JAR with Maven"
+        type: boolean
+        default: false
+      run_build_docker:
+        description: "Build & push Docker image (requires jar)"
+        type: boolean
+        default: false
+      run_deploy:
+        description: "Deploy (requires image)"
+        type: boolean
+        default: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # static
+  SERVICE_PORT: "8189"
+  SERVICE_NAME: "iam-service"
+  IMAGE_NAME: "iam-service"
+  DOCKER_NETWORK: "app-network"
+  CI_REGISTRY: "docker.io"
+
+  # secrets/vars
+  CI_REGISTRY_USER: ${{ secrets.DOCKER_USER }}
+  CI_REGISTRY_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  HOST: ${{ secrets.SERVER_IP }}
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------- tests (auto on PR/push; auto on manual if any later stage requested) ----------
+  tests:
+    if: >
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.run_tests || inputs.run_build_jar || inputs.run_build_docker || inputs.run_deploy))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin) with Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Run tests
+        run: |
+          set -Eeuo pipefail
+          mvn -B -Dgroups=!integration test
+
+  # ---------- build jar (manual; auto-triggered if docker/deploy requested) ----------
+  build_jar:
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.run_build_jar || inputs.run_build_docker || inputs.run_deploy)
+    needs: [ tests ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin) with Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Build JAR
+        run: |
+          set -Eeuo pipefail
+          mvn -B clean install -DskipTests
+
+      - name: Upload artifact (target/*.jar)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+          if-no-files-found: error
+          retention-days: 7
+
+  # ---------- build & push docker (manual; depends on jar) ----------
+  build_docker:
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.run_build_docker || inputs.run_deploy)
+    needs: [ build_jar ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: target
+
+      - name: Docker login (Docker Hub)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.CI_REGISTRY }}
+          username: ${{ env.CI_REGISTRY_USER }}
+          password: ${{ env.CI_REGISTRY_PASSWORD }}
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          set -Eeuo pipefail
+          TAG="${{ github.ref_name }}-${{ github.run_id }}"
+          IMAGE="${CI_REGISTRY}/${CI_REGISTRY_USER}/${IMAGE_NAME}:${TAG}"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+          echo "Using image (build): $IMAGE"
+
+      - name: Build & push image
+        run: |
+          set -Eeuo pipefail
+          docker build -f docker/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "Docker image pushed: $IMAGE"
+
+  # ---------- deploy (manual; depends on image) ----------
+  deploy:
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      inputs.run_deploy
+    needs: [ build_docker ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-iam-service
+      cancel-in-progress: false
+    steps:
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Compute image tag (same formula as build)
+        run: |
+          set -Eeuo pipefail
+          TAG="${{ github.ref_name }}-${{ github.run_id }}"
+          IMAGE="${CI_REGISTRY}/${CI_REGISTRY_USER}/${IMAGE_NAME}:${TAG}"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+          echo "Using image (deploy): $IMAGE"
+
+      - name: Login to Docker Hub on remote
+        run: |
+          set -Eeuo pipefail
+          ssh -o StrictHostKeyChecking=no root@"$HOST" \
+            "echo '${CI_REGISTRY_PASSWORD}' | docker login -u '${CI_REGISTRY_USER}' --password-stdin ${CI_REGISTRY}" || {
+              echo '!!!!! Docker login FAILED !!!!!'; exit 1; }
+
+      - name: Pull & run container on remote
+        run: |
+          set -Eeuo pipefail
+          echo "Using image = $IMAGE"
+
+          ssh -o StrictHostKeyChecking=no root@"$HOST" "docker system prune -af" || {
+            echo '!!!!! Docker prune FAILED !!!!!'; exit 1; }
+
+          ssh -o StrictHostKeyChecking=no root@"$HOST" "docker pull $IMAGE" || {
+            echo '!!!!! Docker pull FAILED !!!!!'; exit 1; }
+          echo "!!!!! PULL IS SUCCESSFUL !!!!!"
+
+          # ensure network exists
+          ssh -o StrictHostKeyChecking=no root@"$HOST" "docker network create $DOCKER_NETWORK || true"
+
+          ssh -o StrictHostKeyChecking=no root@"$HOST" "docker stop $SERVICE_NAME || echo 'Container $SERVICE_NAME not running'"
+          ssh -o StrictHostKeyChecking=no root@"$HOST" "docker rm $SERVICE_NAME || echo 'Container $SERVICE_NAME not found'"
+          echo "!!!!! Docker stop and rm is SUCCESSFUL !!!!!"
+
+          ssh -o StrictHostKeyChecking=no root@"$HOST" "\
+            docker run -d --restart unless-stopped \
+              --name=$SERVICE_NAME \
+              -p $SERVICE_PORT:$SERVICE_PORT \
+              --network $DOCKER_NETWORK \
+              -e PROFILE=prod \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+              -e CONSUL_HOST=${{ secrets.CONSUL_HOST }} \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_NAME=${{ secrets.DB_NAME }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e KAFKA_HOST=${{ secrets.KAFKA_HOST }} \
+              -e SERVER_IP=$HOST \
+              $IMAGE" || { echo '!!!!! Docker run FAILED !!!!!'; exit 1; }
+
+          echo "!!!!! Docker run is SUCCESSFUL !!!!!"
