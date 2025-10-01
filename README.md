@@ -70,7 +70,7 @@ All versions are aligned with this service’s `pom.xml`.
 
 * **Swagger UI (local service)**: `http://localhost:8189/swagger-ui/index.html`
 * **OpenAPI JSON**: `http://localhost:8189/v3/api-docs`
-* **Postman**: import the attached [post_collection](postman_collection.json) file included in the repo.
+* **Postman**: import the attached [postman_collection](postman_collection.json) file included in the repo.
 
 > If you are running through the **gateway-service** or Nginx, the path/host may differ.
 
