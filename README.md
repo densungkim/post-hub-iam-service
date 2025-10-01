@@ -30,7 +30,7 @@ their content, and receive notifications about domain events.
 * **Consul**: service discovery/registration.
 
 **Architecture diagram:**  
-<img src="architecture.png" alt="Alt text" width="1000">
+<img src="architecture.jpg" alt="Alt text" width="1000">
 
 ---
 
