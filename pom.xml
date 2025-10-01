@@ -191,11 +191,11 @@
 
     <profiles>
         <profile>
-            <id>local-idea</id>
+            <id>local</id>
             <properties>
-                <envName>local-idea</envName>
+                <envName>local</envName>
                 <skipTests>true</skipTests>
-                <maven-properties.file>src/main/resources/application-local-idea.properties</maven-properties.file>
+                <maven-properties.file>src/main/resources/application-local.properties</maven-properties.file>
             </properties>
         </profile>
         <profile>

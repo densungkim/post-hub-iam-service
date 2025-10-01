@@ -90,7 +90,7 @@ docker compose up -d
 mvn spring-boot:run
 ```
 
-### B) Docker
+### B) Local Docker (default profile: [local](src/main/resources/application-local.properties)
 
 This repo includes [iam-service.sh](docker/iam-service.sh) (entrypoint) and [Dockerfile](docker/Dockerfile).
 
