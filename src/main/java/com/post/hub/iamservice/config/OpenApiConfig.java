@@ -21,7 +21,18 @@ import java.util.Date;
         info = @Info(
                 title = "POST_HUB REST API",
                 version = "1.0",
-                description = "IAM-service REST API"
+                description = """
+                        IAM-service REST API
+
+                        You can test this service using the following demo accounts:
+                              \n- super_admin@gmail.com | password1
+                              \n- admin@gmail.com       | password2
+                              \n- user@gmail.com        | password3
+                        
+                        Use these credentials to obtain a JWT token.
+                        This token is required for secured endpoints in IAM Service itself\s
+                        and is also mandatory when accessing the Utils Service.
+                        """
         ),
         security = {@SecurityRequirement(name = HttpHeaders.AUTHORIZATION)}
 )
