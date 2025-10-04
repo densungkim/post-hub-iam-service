@@ -130,11 +130,11 @@ public class AuthServiceTest {
         assertEquals("access_token_123", result.getPayload().getToken());
         assertEquals("refresh_token_123", result.getPayload().getRefreshToken());
 
-        verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(userRepository, times(1)).findUserByEmailAndDeletedFalse(request.getEmail());
-        verify(refreshTokenService, times(1)).generateOrUpdateRefreshToken(testUser);
-        verify(jwtTokenProvider, times(1)).generateToken(testUser);
-        verify(userMapper, times(1)).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findUserByEmailAndDeletedFalse(request.getEmail());
+        verify(refreshTokenService).generateOrUpdateRefreshToken(testUser);
+        verify(jwtTokenProvider).generateToken(testUser);
+        verify(userMapper).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
     }
 
     @Test
@@ -225,17 +225,17 @@ public class AuthServiceTest {
         assertEquals("access_token_123", result.getPayload().getToken());
         assertEquals("refresh_token_123", result.getPayload().getRefreshToken());
 
-        verify(accessValidator, times(1)).validateNewUser(
+        verify(accessValidator).validateNewUser(
                 request.getUsername(),
                 request.getEmail(),
                 request.getPassword(),
                 request.getConfirmPassword()
         );
-        verify(roleRepository, times(1)).findByName(IamServiceUserRole.USER.getRole());
-        verify(userRepository, times(1)).save(any(User.class));
-        verify(refreshTokenService, times(1)).generateOrUpdateRefreshToken(testUser);
-        verify(jwtTokenProvider, times(1)).generateToken(testUser);
-        verify(userMapper, times(1)).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
+        verify(roleRepository).findByName(IamServiceUserRole.USER.getRole());
+        verify(userRepository).save(any(User.class));
+        verify(refreshTokenService).generateOrUpdateRefreshToken(testUser);
+        verify(jwtTokenProvider).generateToken(testUser);
+        verify(userMapper).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
     }
 
     @Test

@@ -23,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,10 +30,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.jpa.domain.Specification;
-
-import static org.mockito.ArgumentMatchers.*;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +39,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,7 +70,7 @@ public class CommentServiceTest {
     @InjectMocks
     private CommentServiceImpl commentService;
 
-    private Comment tesComment;
+    private Comment testComment;
     private CommentDTO testCommentDTO;
     private User testUser;
     private Post testPost;
@@ -88,11 +85,11 @@ public class CommentServiceTest {
         testPost.setId(1);
         testPost.setTitle("TestPost");
 
-        tesComment = new Comment();
-        tesComment.setId(1);
-        tesComment.setMessage("Test Comment");
-        tesComment.setPost(testPost);
-        tesComment.setUser(testUser);
+        testComment = new Comment();
+        testComment.setId(1);
+        testComment.setMessage("Test Comment");
+        testComment.setPost(testPost);
+        testComment.setUser(testUser);
 
         testCommentDTO = new CommentDTO();
         testCommentDTO.setId(1);
@@ -102,8 +99,8 @@ public class CommentServiceTest {
 
     @Test
     void getCommentById_CommentExists_ReturnsCommentDTO() {
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
-        when(commentMapper.toDTO(tesComment)).thenReturn(testCommentDTO);
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
+        when(commentMapper.toDTO(testComment)).thenReturn(testCommentDTO);
 
         CommentDTO result = commentService.getCommentById(1).getPayload();
 
@@ -111,8 +108,8 @@ public class CommentServiceTest {
         assertEquals(testCommentDTO.getId(), result.getId());
         assertEquals(testCommentDTO.getMessage(), result.getMessage());
 
-        verify(commentRepository, times(1)).findByIdAndDeletedFalse(1);
-        verify(commentMapper, times(1)).toDTO(tesComment);
+        verify(commentRepository).findByIdAndDeletedFalse(1);
+        verify(commentMapper).toDTO(testComment);
     }
 
     @Test
@@ -123,7 +120,7 @@ public class CommentServiceTest {
 
         assertTrue(exception.getMessage().contains("not found"));
 
-        verify(commentRepository, times(1)).findByIdAndDeletedFalse(999);
+        verify(commentRepository).findByIdAndDeletedFalse(999);
         verify(commentMapper, never()).toDTO(any(Comment.class));
     }
 
@@ -134,21 +131,21 @@ public class CommentServiceTest {
         when(apiUtils.getUserIdFromAuthentication()).thenReturn(testUser.getId());
         when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
         when(postRepository.findByIdAndDeletedFalse(testPost.getId())).thenReturn(Optional.of(testPost));
-        when(commentMapper.createComment(request, testUser, testPost)).thenReturn(tesComment);
-        when(commentRepository.save(any(Comment.class))).thenReturn(tesComment);
-        when(commentMapper.toDTO(tesComment)).thenReturn(testCommentDTO);
+        when(commentMapper.createComment(request, testUser, testPost)).thenReturn(testComment);
+        when(commentRepository.save(any(Comment.class))).thenReturn(testComment);
+        when(commentMapper.toDTO(testComment)).thenReturn(testCommentDTO);
 
         CommentDTO result = commentService.createComment(request).getPayload();
 
         assertNotNull(result);
         assertEquals(testCommentDTO.getMessage(), result.getMessage());
 
-        verify(apiUtils, times(1)).getUserIdFromAuthentication();
-        verify(userRepository, times(1)).findById(testUser.getId());
-        verify(postRepository, times(1)).findByIdAndDeletedFalse(testPost.getId());
-        verify(commentRepository, times(1)).save(any(Comment.class));
-        verify(commentMapper, times(1)).toDTO(any(Comment.class));
-        verify(kafkaMessageService, times(1)).sendCommentCreatedMessage(testUser.getId(), testPost.getId());
+        verify(apiUtils).getUserIdFromAuthentication();
+        verify(userRepository).findById(testUser.getId());
+        verify(postRepository).findByIdAndDeletedFalse(testPost.getId());
+        verify(commentRepository).save(any(Comment.class));
+        verify(commentMapper).toDTO(any(Comment.class));
+        verify(kafkaMessageService).sendCommentCreatedMessage(testUser.getId(), testPost.getId());
     }
 
     @Test
@@ -178,9 +175,9 @@ public class CommentServiceTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("not found");
 
-        verify(apiUtils, times(1)).getUserIdFromAuthentication();
-        verify(userRepository, times(1)).findById(testUser.getId());
-        verify(postRepository, times(1)).findByIdAndDeletedFalse(testPost.getId());
+        verify(apiUtils).getUserIdFromAuthentication();
+        verify(userRepository).findById(testUser.getId());
+        verify(postRepository).findByIdAndDeletedFalse(testPost.getId());
         verify(commentRepository, never()).save(any(Comment.class));
         verify(commentMapper, never()).toDTO(any(Comment.class));
     }
@@ -189,7 +186,7 @@ public class CommentServiceTest {
     void updateComment_OK_updatesMessageOnly_whenPostIdNull() {
         UpdateCommentRequest req = new UpdateCommentRequest(null, "Updated msg");
 
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
         doNothing().when(accessValidator).validateAdminOrOwnerAccess(testUser.getId());
         doAnswer(inv -> {
             Comment c = inv.getArgument(0);
@@ -202,14 +199,14 @@ public class CommentServiceTest {
         CommentDTO dto = new CommentDTO();
         dto.setId(1);
         dto.setMessage("Updated msg");
-        when(commentMapper.toDTO(tesComment)).thenReturn(dto);
+        when(commentMapper.toDTO(testComment)).thenReturn(dto);
 
         IamResponse<CommentDTO> resp = commentService.updateComment(1, req);
         assertTrue(resp.isSuccess());
         assertEquals("Updated msg", resp.getPayload().getMessage());
 
         verify(postRepository, never()).findById(anyInt());
-        verify(kafkaMessageService).sendCommentUpdatedMessage(testUser.getId(), tesComment.getId(), "Updated msg");
+        verify(kafkaMessageService).sendCommentUpdatedMessage(testUser.getId(), testComment.getId(), "Updated msg");
     }
 
     @Test
@@ -219,21 +216,21 @@ public class CommentServiceTest {
         newPost.setId(2);
         newPost.setTitle("Another");
 
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
         doNothing().when(accessValidator).validateAdminOrOwnerAccess(testUser.getId());
         when(postRepository.findById(2)).thenReturn(Optional.of(newPost));
         doNothing().when(commentMapper).updateComment(any(Comment.class), any(UpdateCommentRequest.class));
         when(commentRepository.save(any(Comment.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        when(commentMapper.toDTO(tesComment))
-                .thenReturn(new CommentDTO(1, tesComment.getMessage(), null, 2, null, null));
+        when(commentMapper.toDTO(testComment))
+                .thenReturn(new CommentDTO(1, testComment.getMessage(), null, 2, null, null));
 
         IamResponse<CommentDTO> resp = commentService.updateComment(1, req);
         assertTrue(resp.isSuccess());
         assertEquals(2, resp.getPayload().getPostId());
 
-        assertEquals(2, tesComment.getPost().getId());
-        verify(kafkaMessageService).sendCommentUpdatedMessage(eq(testUser.getId()), eq(tesComment.getId()), anyString());
+        assertEquals(2, testComment.getPost().getId());
+        verify(kafkaMessageService).sendCommentUpdatedMessage(eq(testUser.getId()), eq(testComment.getId()), anyString());
     }
 
 
@@ -252,7 +249,7 @@ public class CommentServiceTest {
     void updateComment_PostNotFound_Throws() {
         UpdateCommentRequest req = new UpdateCommentRequest(9, "x");
 
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
         doNothing().when(accessValidator).validateAdminOrOwnerAccess(testUser.getId());
         when(postRepository.findById(9)).thenReturn(Optional.empty());
 
@@ -264,7 +261,7 @@ public class CommentServiceTest {
 
     @Test
     void updateComment_AccessDenied_Propagates() {
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
         doThrow(new AccessDeniedException("forbidden"))
                 .when(accessValidator).validateAdminOrOwnerAccess(testUser.getId());
 
@@ -276,15 +273,15 @@ public class CommentServiceTest {
 
     @Test
     void softDelete_OK_setsDeletedTrue_andSendsEvent() {
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
         doNothing().when(accessValidator).validateAdminOrOwnerAccess(testUser.getId());
         when(commentRepository.save(any(Comment.class))).thenAnswer(inv -> inv.getArgument(0));
 
         commentService.softDelete(1);
 
-        assertTrue(tesComment.getDeleted(), "flag deleted must be true");
-        verify(commentRepository).save(tesComment);
-        verify(kafkaMessageService).sendCommentDeletedMessage(testUser.getId(), tesComment.getId());
+        assertTrue(testComment.getDeleted(), "flag deleted must be true");
+        verify(commentRepository).save(testComment);
+        verify(kafkaMessageService).sendCommentDeletedMessage(testUser.getId(), testComment.getId());
     }
 
     @Test
@@ -300,7 +297,7 @@ public class CommentServiceTest {
 
     @Test
     void softDelete_AccessDenied_Propagates() {
-        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(tesComment));
+        when(commentRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(testComment));
         doThrow(new AccessDeniedException("nope"))
                 .when(accessValidator).validateAdminOrOwnerAccess(testUser.getId());
 
