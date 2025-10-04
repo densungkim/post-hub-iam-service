@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.post.hub.iamservice.IamServiceApplication;
-import com.post.hub.iamservice.kafka.service.KafkaMessageService;
 import com.post.hub.iamservice.model.dto.post.PostDTO;
 import com.post.hub.iamservice.model.dto.post.PostSearchDTO;
 import com.post.hub.iamservice.model.entities.User;
@@ -20,9 +19,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -70,6 +67,8 @@ public class PostControllerTest {
     @BeforeAll
     @Transactional
     void authorize() {
+        objectMapper.registerModule(new JavaTimeModule());
+
         User admin = userRepository.findById(1)
                 .orElseThrow(() -> new InvalidDataException("User with ID: 1 not found"));
         Hibernate.initialize(admin.getRoles());
@@ -277,7 +276,20 @@ public class PostControllerTest {
 
     @Test
     void searchPosts_200_OK() throws Exception {
-        PostSearchRequest request = new PostSearchRequest(); // пустой запрос допустим
+        String prefix = "KEYWORD_" + System.nanoTime();
+        NewPostRequest p1 = new NewPostRequest("T " + prefix, "C1 " + prefix, 1);
+        NewPostRequest p2 = new NewPostRequest("T2", "C2 " + prefix, 2);
+        mockMvc.perform(MockMvcRequestBuilders.post("/posts")
+                .header(HttpHeaders.AUTHORIZATION, currentJwt)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(p1)));
+        mockMvc.perform(MockMvcRequestBuilders.post("/posts")
+                .header(HttpHeaders.AUTHORIZATION, currentJwt)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(p2)));
+
+        PostSearchRequest request = new PostSearchRequest();
+        request.setKeyword(prefix);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/search")
@@ -293,9 +305,17 @@ public class PostControllerTest {
         IamResponse<PaginationResponse<PostSearchDTO>> response =
                 parsePostSearchPageResponse(result.getResponse().getContentAsByteArray());
 
+        PaginationResponse<PostSearchDTO> payload = response.getPayload();
+
         Assertions.assertTrue(response.isSuccess());
-        Assertions.assertNotNull(response.getPayload());
-        Assertions.assertNotNull(response.getPayload().getContent());
+        Assertions.assertNotNull(payload);
+        Assertions.assertNotNull(payload.getContent());
+        Assertions.assertFalse(payload.getContent().isEmpty());
+        Assertions.assertTrue(payload.getContent().size() <= 5, "limit respected");
+        Assertions.assertTrue(payload.getContent().stream().allMatch(p ->
+                (p.getTitle() != null && p.getTitle().contains(prefix)) ||
+                        (p.getContent() != null && p.getContent().contains(prefix))), "filtered by keyword");
+
     }
 
     @Test
@@ -313,7 +333,6 @@ public class PostControllerTest {
 
     private IamResponse<PostDTO> parsePostDTOResponse(byte[] contentAsByteArray) {
         try {
-            objectMapper.registerModule(new JavaTimeModule());
             return objectMapper.readValue(contentAsByteArray, new TypeReference<>() {
             });
         } catch (IOException e) {
@@ -323,7 +342,6 @@ public class PostControllerTest {
 
     private IamResponse<PaginationResponse<PostSearchDTO>> parsePostSearchPageResponse(byte[] contentAsByteArray) {
         try {
-            objectMapper.registerModule(new JavaTimeModule());
             return objectMapper.readValue(contentAsByteArray, new TypeReference<>() {
             });
         } catch (IOException e) {
