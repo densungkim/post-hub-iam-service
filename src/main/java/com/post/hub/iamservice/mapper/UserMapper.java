@@ -30,11 +30,23 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
+    @Mapping(target = "lastLogin", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "updated", ignore = true)
+    @Mapping(target = "posts", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     @Mapping(target = "registrationStatus", expression = "java(RegistrationStatus.ACTIVE)")
     User createUser(NewUserRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "registrationStatus", ignore = true)
+    @Mapping(target = "lastLogin", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "updated", ignore = true)
+    @Mapping(target = "posts", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     void updateUser(@MappingTarget User user, UpdateUserRequest request);
 
     @Mapping(source = "deleted", target = "isDeleted")
@@ -50,6 +62,12 @@ public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "lastLogin", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "created", ignore = true)
+    @Mapping(target = "updated", ignore = true)
+    @Mapping(target = "posts", ignore = true)
     @Mapping(target = "registrationStatus", expression = "java(RegistrationStatus.ACTIVE)")
     User fromDto(RegistrationUserRequest request);
 

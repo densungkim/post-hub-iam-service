@@ -23,6 +23,4 @@ public class NewUserRequest {
     @Size(max = 50)
     private String email;
 
-
-
 }

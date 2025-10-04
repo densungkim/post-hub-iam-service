@@ -41,6 +41,7 @@ public interface CommentMapper {
     @Mapping(target = "updated", ignore = true)
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "user", ignore = true)
     void updateComment(@MappingTarget Comment comment, UpdateCommentRequest request);
 
     @Mapping(source = "user.id", target = "owner.id")
