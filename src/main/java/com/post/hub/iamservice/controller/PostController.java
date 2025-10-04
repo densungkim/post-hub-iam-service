@@ -39,7 +39,6 @@ public class PostController {
     ) {
         log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
-        System.out.println("PRINCIPAL: " + principal.getName());
         IamResponse<PostDTO> response = postService.createPost(request);
         return ResponseEntity.ok(response);
     }

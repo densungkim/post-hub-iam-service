@@ -69,7 +69,7 @@ jobs:
       - name: Run tests
         run: |
           set -Eeuo pipefail
-          mvn -B -Dgroups=!integration test
+          mvn -B -Dgroups=!integration -Dspring.profiles.active=test test
 
   # ---------- build jar (manual; auto-triggered if docker/deploy requested) ----------
   build_jar:

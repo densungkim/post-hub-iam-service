@@ -7,6 +7,9 @@ import com.post.hub.iamservice.model.entities.Role;
 import com.post.hub.iamservice.model.entities.User;
 import com.post.hub.iamservice.model.enums.RegistrationStatus;
 import com.post.hub.iamservice.model.exception.InvalidDataException;
+import com.post.hub.iamservice.model.exception.InvalidPasswordException;
+import com.post.hub.iamservice.model.exception.NotFoundException;
+import com.post.hub.iamservice.model.request.user.ChangePasswordRequest;
 import com.post.hub.iamservice.model.request.user.LoginRequest;
 import com.post.hub.iamservice.model.request.user.RegistrationUserRequest;
 import com.post.hub.iamservice.model.response.IamResponse;
@@ -16,12 +19,16 @@ import com.post.hub.iamservice.security.JwtTokenProvider;
 import com.post.hub.iamservice.security.validation.AccessValidator;
 import com.post.hub.iamservice.service.impl.AuthServiceImpl;
 import com.post.hub.iamservice.service.model.IamServiceUserRole;
+import com.post.hub.iamservice.utils.ApiUtils;
+import com.post.hub.iamservice.utils.PasswordUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -64,6 +71,9 @@ public class AuthServiceTest {
     @Mock
     private AccessValidator accessValidator;
 
+    @Mock
+    private ApiUtils apiUtils;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -83,6 +93,7 @@ public class AuthServiceTest {
         testUser.setLastLogin(LocalDateTime.now());
 
         userRole = new Role();
+        userRole.setId(10);
         userRole.setName("USER");
         testUser.setRoles(Collections.singleton(userRole));
 
@@ -119,11 +130,11 @@ public class AuthServiceTest {
         assertEquals("access_token_123", result.getPayload().getToken());
         assertEquals("refresh_token_123", result.getPayload().getRefreshToken());
 
-        verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(userRepository, times(1)).findUserByEmailAndDeletedFalse(request.getEmail());
-        verify(refreshTokenService, times(1)).generateOrUpdateRefreshToken(testUser);
-        verify(jwtTokenProvider, times(1)).generateToken(testUser);
-        verify(userMapper, times(1)).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findUserByEmailAndDeletedFalse(request.getEmail());
+        verify(refreshTokenService).generateOrUpdateRefreshToken(testUser);
+        verify(jwtTokenProvider).generateToken(testUser);
+        verify(userMapper).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
     }
 
     @Test
@@ -142,6 +153,46 @@ public class AuthServiceTest {
         verify(jwtTokenProvider, never()).generateToken(any(User.class));
     }
 
+
+    @Test
+    void login_UserNotFoundAfterAuth_ThrowsInvalidData() {
+        LoginRequest request = new LoginRequest("missing@gmail.com", "ok");
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
+        when(userRepository.findUserByEmailAndDeletedFalse(request.getEmail())).thenReturn(Optional.empty());
+
+        assertThrows(InvalidDataException.class, () -> authService.login(request));
+
+        verify(refreshTokenService, never()).generateOrUpdateRefreshToken(any());
+        verify(jwtTokenProvider, never()).generateToken(any());
+        verify(userMapper, never()).toUserProfileDTO(any(), anyString(), anyString());
+    }
+
+    @Test
+    void refreshAccessToken_Valid_ReturnsNewAccessToken() {
+        RefreshToken rt = new RefreshToken();
+        rt.setToken("refresh_token_123");
+        rt.setUser(testUser);
+
+        when(refreshTokenService.validateAndRefreshToken("refresh_token_123")).thenReturn(rt);
+        when(jwtTokenProvider.generateToken(testUser)).thenReturn("new_access_456");
+        when(userMapper.toUserProfileDTO(testUser, "new_access_456", "refresh_token_123"))
+                .thenReturn(new UserProfileDTO(
+                        testUser.getId(), testUser.getUsername(), testUser.getEmail(),
+                        testUser.getRegistrationStatus(), testUser.getLastLogin(),
+                        "new_access_456", "refresh_token_123", Collections.emptyList()
+                ));
+
+        IamResponse<UserProfileDTO> result = authService.refreshAccessToken("refresh_token_123");
+
+        assertNotNull(result);
+        assertEquals("new_access_456", result.getPayload().getToken());
+        assertEquals("refresh_token_123", result.getPayload().getRefreshToken());
+
+        verify(refreshTokenService).validateAndRefreshToken("refresh_token_123");
+        verify(jwtTokenProvider).generateToken(testUser);
+        verify(userMapper).toUserProfileDTO(testUser, "new_access_456", "refresh_token_123");
+    }
 
     @Test
     void registerUser_ValidRequest_CreatesUserSuccessfully() {
@@ -174,16 +225,97 @@ public class AuthServiceTest {
         assertEquals("access_token_123", result.getPayload().getToken());
         assertEquals("refresh_token_123", result.getPayload().getRefreshToken());
 
-        verify(accessValidator, times(1)).validateNewUser(
+        verify(accessValidator).validateNewUser(
                 request.getUsername(),
                 request.getEmail(),
                 request.getPassword(),
                 request.getConfirmPassword()
         );
-        verify(roleRepository, times(1)).findByName(IamServiceUserRole.USER.getRole());
-        verify(userRepository, times(1)).save(any(User.class));
-        verify(refreshTokenService, times(1)).generateOrUpdateRefreshToken(testUser);
-        verify(jwtTokenProvider, times(1)).generateToken(testUser);
-        verify(userMapper, times(1)).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
+        verify(roleRepository).findByName(IamServiceUserRole.USER.getRole());
+        verify(userRepository).save(any(User.class));
+        verify(refreshTokenService).generateOrUpdateRefreshToken(testUser);
+        verify(jwtTokenProvider).generateToken(testUser);
+        verify(userMapper).toUserProfileDTO(testUser, "access_token_123", testRefreshToken.getToken());
+    }
+
+    @Test
+    void registerUser_RoleMissing_ThrowsNotFound() {
+        RegistrationUserRequest request = new RegistrationUserRequest("newUser", "newuser@gmail.com", "p", "p");
+
+        doNothing().when(accessValidator).validateNewUser(anyString(), anyString(), anyString(), anyString());
+        when(roleRepository.findByName(IamServiceUserRole.USER.getRole())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> authService.registerUser(request));
+
+        verify(userRepository, never()).save(any());
+        verify(refreshTokenService, never()).generateOrUpdateRefreshToken(any());
+    }
+
+    @Test
+    void registerUser_ValidationFails_ThrowsInvalidData() {
+        RegistrationUserRequest request = new RegistrationUserRequest("bad", "bad@mail", "x", "y");
+
+        doThrow(new InvalidDataException("validation fail")).when(accessValidator).validateNewUser(
+                anyString(), anyString(), anyString(), anyString()
+        );
+
+        assertThrows(InvalidDataException.class, () -> authService.registerUser(request));
+
+        verify(roleRepository, never()).findByName(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_HappyPath_EncodesAndSaves() {
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setPassword("StrongPass1!");
+        req.setConfirmPassword("StrongPass1!");
+
+        when(apiUtils.getUserIdFromAuthentication()).thenReturn(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode("StrongPass1!")).thenReturn("hashedNew");
+
+        try (MockedStatic<PasswordUtils> mock = Mockito.mockStatic(PasswordUtils.class)) {
+            mock.when(() -> PasswordUtils.isNotValidPassword("StrongPass1!")).thenReturn(false);
+
+            IamResponse<String> result = authService.changePassword(req);
+
+            assertNotNull(result);
+            assertTrue(result.isSuccess());
+            verify(userRepository).save(testUser);
+            assertEquals("hashedNew", testUser.getPassword());
+        }
+    }
+
+    @Test
+    void changePassword_InvalidPassword_ThrowsInvalidPasswordException() {
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setPassword("weak");
+        req.setConfirmPassword("weak");
+
+        when(apiUtils.getUserIdFromAuthentication()).thenReturn(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(testUser));
+
+        try (MockedStatic<PasswordUtils> mock = Mockito.mockStatic(PasswordUtils.class)) {
+            mock.when(() -> PasswordUtils.isNotValidPassword("weak")).thenReturn(true);
+
+            assertThrows(InvalidPasswordException.class, () -> authService.changePassword(req));
+
+            verify(userRepository, never()).save(any());
+            verify(passwordEncoder, never()).encode(anyString());
+        }
+    }
+
+    @Test
+    void changePassword_UserNotFound_ThrowsNotFound() {
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setPassword("StrongPass1!");
+        req.setConfirmPassword("StrongPass1!");
+
+        when(apiUtils.getUserIdFromAuthentication()).thenReturn(99);
+        when(userRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> authService.changePassword(req));
+        verify(passwordEncoder, never()).encode(anyString());
     }
 }

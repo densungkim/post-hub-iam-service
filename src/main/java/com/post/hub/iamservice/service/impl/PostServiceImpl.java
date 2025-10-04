@@ -130,7 +130,7 @@ public class PostServiceImpl implements PostService {
                                 .total(posts.getTotalElements())
                                 .limit(pageable.getPageSize())
                                 .page(posts.getNumber() + 1)
-                                .page(posts.getTotalPages())
+                                .pages(posts.getTotalPages())
                                 .build()
                 )
                 .build();
