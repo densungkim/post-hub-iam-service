@@ -170,7 +170,7 @@ class UserServiceTest {
         assertThrows(DataExistException.class, () -> userService.createUser(request));
 
         verify(userRepository).existsByUsername(request.getUsername());
-        verify(userRepository, never()).existsByEmail(anyString());
+        verify(userRepository).existsByEmail(anyString());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -377,7 +377,7 @@ class UserServiceTest {
         assertEquals("ENC", ud.getPassword());
         assertThat(ud.getAuthorities())
                 .extracting(Object::toString)
-                .containsExactlyInAnyOrder("ADMIN", "USER");
+                .containsExactlyInAnyOrder("ADMIN", "SUPER_ADMIN");
 
         verify(userRepository).save(dbUser);
         assertNotNull(dbUser.getLastLogin());
