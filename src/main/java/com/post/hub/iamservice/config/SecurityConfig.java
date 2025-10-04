@@ -2,7 +2,6 @@ package com.post.hub.iamservice.config;
 
 import com.post.hub.iamservice.security.filter.JwtRequestFilter;
 import com.post.hub.iamservice.security.handler.AccessRestrictionHandler;
-import com.post.hub.iamservice.service.UserService;
 import com.post.hub.iamservice.service.model.IamServiceUserRole;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +12,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -72,13 +70,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(UserService userService) {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(userService);
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        return daoAuthenticationProvider;
     }
 
     @Bean
