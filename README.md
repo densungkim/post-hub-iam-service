@@ -60,7 +60,8 @@ their content, and receive notifications about domain events.
 * **MapStruct** 1.6.3 (+ annotation processor)
 * **Spring Kafka**, **Spring Cloud Consul Discovery**, **Actuator**
 * **OpenAPI/Swagger** via `springdoc-openapi-starter-webmvc-ui` 2.8.9
-* Tests: **JUnit 5**, **Mockito**, **spring-security-test** (Surefire with `-XX:+EnableDynamicAgentLoading`)
+* Testing: **JUnit 5**, **Mockito**, **spring-security-test** (Surefire with `-XX:+EnableDynamicAgentLoading`)
+* **Testcontainers:** PostgreSQL + Kafka
 
 All versions are aligned with this service’s `pom.xml`.
 
@@ -150,12 +151,16 @@ docker run -d --restart unless-stopped \
 
 ```bash
 # run unit tests
-mvn test -Dgroups='!integration'
+mvn test -Dgroups='unit'
 ```
 
 ```bash
-# integration test requires postgres and kafka
-docker compose up -d
+# integration test
+mvn test -Dgroups='integration'
+```
+
+```bash
+# all test
 mvn test
 ```
 

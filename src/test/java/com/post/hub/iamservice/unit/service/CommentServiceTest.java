@@ -1,4 +1,4 @@
-package com.post.hub.iamservice.service;
+package com.post.hub.iamservice.unit.service;
 
 import com.post.hub.iamservice.kafka.service.KafkaMessageService;
 import com.post.hub.iamservice.mapper.CommentMapper;
@@ -20,6 +20,7 @@ import com.post.hub.iamservice.security.validation.AccessValidator;
 import com.post.hub.iamservice.service.impl.CommentServiceImpl;
 import com.post.hub.iamservice.utils.ApiUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +45,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
+@Tag("unit")
 public class CommentServiceTest {
 
     @Mock

@@ -3,7 +3,7 @@ package com.post.hub.iamservice.integration.controller;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.post.hub.iamservice.IamServiceApplication;
+import com.post.hub.iamservice.integration.BaseIntegrationTest;
 import com.post.hub.iamservice.model.dto.comment.CommentDTO;
 import com.post.hub.iamservice.model.dto.comment.CommentSearchDTO;
 import com.post.hub.iamservice.model.entities.User;
@@ -18,16 +18,11 @@ import com.post.hub.iamservice.security.JwtTokenProvider;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -37,13 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@SpringBootTest(classes = IamServiceApplication.class)
 @AutoConfigureMockMvc
-@ExtendWith({MockitoExtension.class, SpringExtension.class})
-@TestPropertySource(properties = {"logging.level.com.post.hub.iamservice.advice.CommonControllerAdvice=OFF"})
+@ActiveProfiles("test")
 @Tag("integration")
-public class CommentControllerTest {
+public class CommentControllerTest extends BaseIntegrationTest {
 
     private static final int EXISTING_COMMENT_ID = 1;
     private static final int MISSING_COMMENT_ID = 9_999_999;
