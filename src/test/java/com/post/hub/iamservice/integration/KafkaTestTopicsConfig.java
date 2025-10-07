@@ -1,4 +1,4 @@
-package com.post.hub.iamservice;// например рядом с твоим BaseIntegrationTest
+package com.post.hub.iamservice.integration;// например рядом с твоим BaseIntegrationTest
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;

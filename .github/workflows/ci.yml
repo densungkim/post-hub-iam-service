@@ -46,8 +46,8 @@ permissions:
   contents: read
 
 jobs:
-  # ---------- tests (auto on PR/push; auto on manual if any later stage requested) ----------
-  tests:
+  # ---------- unit tests (auto on PR/push; auto on manual if any later stage requested) ----------
+  unit_tests:
     if: >
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) ||
@@ -66,17 +66,40 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Run tests
+      - name: Run UNIT tests (@Tag("unit"))
         run: |
           set -Eeuo pipefail
-          mvn -B test
+          mvn -B test -Dgroups='unit'
+
+  # ---------- integration tests (auto on PR/push; auto on manual if any later stage requested) ----------
+  integration_tests:
+    if: >
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.run_tests || inputs.run_build_jar || inputs.run_build_docker || inputs.run_deploy))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 21 (Temurin) with Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: 'maven'
+      - name: Run INTEGRATION tests (@Tag("integration"))
+        run: |
+          set -Eeuo pipefail
+          mvn -B test -Dgroups='integration'
 
   # ---------- build jar (manual; auto-triggered if docker/deploy requested) ----------
   build_jar:
     if: >
       github.event_name == 'workflow_dispatch' &&
       (inputs.run_build_jar || inputs.run_build_docker || inputs.run_deploy)
-    needs: [ tests ]
+    needs: [ unit_tests, integration_tests ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

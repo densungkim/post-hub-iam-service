@@ -1,4 +1,4 @@
-package com.post.hub.iamservice.service;
+package com.post.hub.iamservice.unit.service;
 
 import com.post.hub.iamservice.mapper.UserMapper;
 import com.post.hub.iamservice.model.dto.user.UserProfileDTO;
@@ -17,11 +17,13 @@ import com.post.hub.iamservice.repository.RoleRepository;
 import com.post.hub.iamservice.repository.UserRepository;
 import com.post.hub.iamservice.security.JwtTokenProvider;
 import com.post.hub.iamservice.security.validation.AccessValidator;
+import com.post.hub.iamservice.service.RefreshTokenService;
 import com.post.hub.iamservice.service.impl.AuthServiceImpl;
 import com.post.hub.iamservice.service.model.IamServiceUserRole;
 import com.post.hub.iamservice.utils.ApiUtils;
 import com.post.hub.iamservice.utils.PasswordUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
+@Tag("unit")
 public class AuthServiceTest {
 
     @Mock

@@ -1,7 +1,9 @@
-package com.post.hub.iamservice.utils;
+package com.post.hub.iamservice.unit.utils;
 
 import com.post.hub.iamservice.model.constants.ApiConstants;
+import com.post.hub.iamservice.utils.PasswordUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,6 +11,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Tag("unit")
 class PasswordUtilsTest {
 
     @Test
