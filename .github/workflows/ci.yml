@@ -155,7 +155,14 @@ jobs:
         id: meta
         run: |
           set -Eeuo pipefail
-          TAG="${{ github.ref_name }}-${{ github.run_id }}"
+          RAW="${GITHUB_REF_NAME}"
+          SAFE=$(echo "$RAW" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's#[^a-z0-9._-]+#-#g' \
+            | sed -E 's/^-+|-+$//g' \
+            | cut -c1-100)
+          SAFE="${SAFE:-branch}"
+          TAG="${SAFE}-${GITHUB_RUN_ID}"
           IMAGE="${CI_REGISTRY}/${CI_REGISTRY_USER}/${IMAGE_NAME}:${TAG}"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
@@ -188,7 +195,14 @@ jobs:
       - name: Compute image tag (same formula as build)
         run: |
           set -Eeuo pipefail
-          TAG="${{ github.ref_name }}-${{ github.run_id }}"
+          RAW="${GITHUB_REF_NAME}"
+          SAFE=$(echo "$RAW" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's#[^a-z0-9._-]+#-#g' \
+            | sed -E 's/^-+|-+$//g' \
+            | cut -c1-100)
+          SAFE="${SAFE:-branch}"
+          TAG="${SAFE}-${GITHUB_RUN_ID}"
           IMAGE="${CI_REGISTRY}/${CI_REGISTRY_USER}/${IMAGE_NAME}:${TAG}"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
           echo "Using image (deploy): $IMAGE"
