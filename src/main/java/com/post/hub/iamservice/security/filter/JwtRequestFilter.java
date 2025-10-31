@@ -68,7 +68,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
                 }
-                ;
             } catch (ExpiredJwtException e) {
                 handleTokenExpiration(requestURI, jwt, response);
                 return;

@@ -31,12 +31,12 @@ public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
     private final AccessRestrictionHandler accessRestrictionHandler;
 
-    private final String[] NOT_SECURED_POST_URLS = new String[]{
+    private static final String[] NOT_SECURED_POST_URLS = {
             "/auth/login",
             "/auth/register",
             "/auth/refresh/token"
     };
-    private final String[] NOT_SECURED_GET_URLS = new String[]{
+    private static final String[] NOT_SECURED_GET_URLS = {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
@@ -44,8 +44,7 @@ public class SecurityConfig {
             "/actuator/**"
     };
 
-    private final String[] ADMIN_ACCESS_POST_URLS = new String[]{"/users"};
-    private final String[] ADMIN_ACCESS_GET_URLS = new String[]{"/users"};
+    private static final String[] ADMIN_ACCESS_URLS = {"/users/**"};
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,8 +54,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, NOT_SECURED_POST_URLS).permitAll()
                                 .requestMatchers(HttpMethod.GET, NOT_SECURED_GET_URLS).permitAll()
-                                .requestMatchers(HttpMethod.POST, ADMIN_ACCESS_POST_URLS).hasAnyAuthority(adminAccessSecurityRoles())
-                                .requestMatchers(HttpMethod.GET, ADMIN_ACCESS_GET_URLS).hasAnyAuthority(adminAccessSecurityRoles())
+                                .requestMatchers(ADMIN_ACCESS_URLS).hasAnyAuthority(adminAccessSecurityRoles())
                                 .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

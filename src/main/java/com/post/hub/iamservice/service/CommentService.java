@@ -7,21 +7,20 @@ import com.post.hub.iamservice.model.request.comment.CommentSearchRequest;
 import com.post.hub.iamservice.model.request.comment.UpdateCommentRequest;
 import com.post.hub.iamservice.model.response.IamResponse;
 import com.post.hub.iamservice.model.response.PaginationResponse;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 
 public interface CommentService {
 
-    IamResponse<CommentDTO> createComment(@NotNull CommentRequest request);
+    IamResponse<CommentDTO> createComment(CommentRequest request);
 
-    IamResponse<CommentDTO> updateComment(@NotNull Integer commentId, @NotNull UpdateCommentRequest request);
+    IamResponse<CommentDTO> updateComment(Integer commentId, UpdateCommentRequest request);
 
-    IamResponse<CommentDTO> getCommentById(@NotNull Integer commentId);
+    IamResponse<CommentDTO> getCommentById(Integer commentId);
 
     IamResponse<PaginationResponse<CommentSearchDTO>> findAllComments(Pageable pageable);
 
-    IamResponse<PaginationResponse<CommentSearchDTO>> searchComments(@NotNull CommentSearchRequest request, Pageable pageable);
+    IamResponse<PaginationResponse<CommentSearchDTO>> searchComments(CommentSearchRequest request, Pageable pageable);
 
-    void softDelete(@NotNull Integer commentId);
+    void softDelete(Integer commentId);
 
 }

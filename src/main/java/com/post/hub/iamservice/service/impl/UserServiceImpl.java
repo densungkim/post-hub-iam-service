@@ -20,7 +20,6 @@ import com.post.hub.iamservice.repository.RoleRepository;
 import com.post.hub.iamservice.repository.UserRepository;
 import com.post.hub.iamservice.repository.criteria.UserSearchCriteria;
 import com.post.hub.iamservice.service.UserService;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public IamResponse<UserDTO> createUser(@NotNull NewUserRequest request) {
+    public IamResponse<UserDTO> createUser(NewUserRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new DataExistException(ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(request.getUsername()));
         }
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
 
         String targetRole = IamServiceUserRole.USER.getRole();
         Role userRole = roleRepository.findByName(targetRole)
-                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(targetRole)));
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
 
         User user = userMapper.createUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -71,24 +71,26 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         UserDTO userDTO = userMapper.toDTO(savedUser);
 
-        kafkaMessageService.sendUserCreatedMessage(user.getId(), user.getUsername());
+        kafkaMessageService.sendUserCreatedMessage(savedUser.getId(), savedUser.getUsername());
 
         return IamResponse.createSuccessful(userDTO);
     }
 
     @Override
     @Transactional
-    public IamResponse<UserDTO> updateUser(@NotNull Integer userId, @NotNull UpdateUserRequest request) {
+    public IamResponse<UserDTO> updateUser(Integer userId, UpdateUserRequest request) {
         User user = userRepository.findByIdAndDeletedFalse(userId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
         accessValidator.validateAdminOrOwnerAccess(userId);
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (!Objects.equals(user.getUsername(), request.getUsername()) &&
+                userRepository.existsByUsername(request.getUsername())) {
             throw new DataExistException(ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(request.getUsername()));
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (!Objects.equals(user.getEmail(), request.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
             throw new DataExistException(ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(request.getEmail()));
         }
 
@@ -105,7 +107,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public IamResponse<UserDTO> getById(@NotNull Integer userId) {
+    public IamResponse<UserDTO> getById(Integer userId) {
         User user = userRepository.findByIdAndDeletedFalse(userId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
@@ -175,7 +177,7 @@ public class UserServiceImpl implements UserService {
     }
 
     static UserDetails getUserDetails(String email, UserRepository userRepository) {
-        User user = userRepository.findUserByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.EMAIL_NOT_FOUND.getMessage(email)));
 
         user.setLastLogin(LocalDateTime.now());
