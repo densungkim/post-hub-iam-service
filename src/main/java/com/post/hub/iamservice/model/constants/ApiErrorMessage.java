@@ -26,6 +26,7 @@ public enum ApiErrorMessage {
     INVALID_USER_OR_PASSWORD("Invalid email or password. Try again"),
     INVALID_USER_REGISTRATION_STATUS("Invalid user registration status: %s. "),
     NOT_FOUND_REFRESH_TOKEN("Refresh token not found."),
+    INVALID_REFRESH_TOKEN("Refresh token is required."),
 
     MISMATCH_PASSWORDS("Password does not match"),
     INVALID_PASSWORD("Invalid password. It must have: "
