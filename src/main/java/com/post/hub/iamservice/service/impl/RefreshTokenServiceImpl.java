@@ -3,6 +3,7 @@ package com.post.hub.iamservice.service.impl;
 import com.post.hub.iamservice.model.constants.ApiErrorMessage;
 import com.post.hub.iamservice.model.entities.RefreshToken;
 import com.post.hub.iamservice.model.entities.User;
+import com.post.hub.iamservice.model.exception.InvalidDataException;
 import com.post.hub.iamservice.model.exception.NotFoundException;
 import com.post.hub.iamservice.repository.RefreshTokenRepository;
 import com.post.hub.iamservice.service.RefreshTokenService;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -41,6 +43,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public RefreshToken validateAndRefreshToken(String requestRefreshToken) {
+        if (!StringUtils.hasText(requestRefreshToken)) {
+            throw new InvalidDataException(ApiErrorMessage.INVALID_REFRESH_TOKEN.getMessage());
+        }
+
         RefreshToken refreshToken = refreshTokenRepository.findByToken(requestRefreshToken)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.NOT_FOUND_REFRESH_TOKEN.getMessage()));
 
