@@ -1,6 +1,5 @@
 package com.post.hub.iamservice.advice;
 
-import com.post.hub.iamservice.model.constants.ApiConstants;
 import com.post.hub.iamservice.model.exception.DataExistException;
 import com.post.hub.iamservice.model.exception.InvalidDataException;
 import com.post.hub.iamservice.model.exception.InvalidPasswordException;
@@ -17,10 +16,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.nio.file.AccessDeniedException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @ControllerAdvice
@@ -48,16 +43,23 @@ public class CommonControllerAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseBody
-    public ResponseEntity<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         logStackTrace(ex);
 
-        Map<String, String> errors = new HashMap<>();
+        StringBuilder errors = new StringBuilder();
         for (ObjectError error : ex.getBindingResult().getAllErrors()) {
             String errorMessage = error.getDefaultMessage();
-            errors.put("error", errorMessage);
+            if (errors.isEmpty()) {
+                errors.append(errorMessage);
+            } else {
+                errors.append("; ");
+                errors.append(errorMessage);
+            }
         }
 
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errors.toString());
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -95,28 +97,7 @@ public class CommonControllerAdvice {
     }
 
     private void logStackTrace(Exception ex) {
-        StringBuilder stackTrace = new StringBuilder();
-
-        stackTrace.append(ApiConstants.ANSI_RED);
-
-        stackTrace.append(ex.getMessage()).append(ApiConstants.BREAK_LINE);
-
-        if (Objects.nonNull(ex.getCause())) {
-            stackTrace.append(ex.getCause().getMessage()).append(ApiConstants.BREAK_LINE);
-        }
-
-        Arrays.stream(ex.getStackTrace())
-                .filter(st -> st.getClassName().startsWith(ApiConstants.TIME_ZONE_PACKAGE_NAME))
-                .forEach(st -> stackTrace
-                        .append(st.getClassName())
-                        .append(".")
-                        .append(st.getMethodName())
-                        .append(" (")
-                        .append(st.getLineNumber())
-                        .append(") ")
-                );
-
-        log.error(stackTrace.append(ApiConstants.ANSI_WHITE).toString());
+        log.error("Unhandled exception captured by controller advice", ex);
     }
 
 }
