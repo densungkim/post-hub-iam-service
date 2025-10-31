@@ -223,7 +223,7 @@
             <properties>
                 <envName>test</envName>
                 <skipTests>true</skipTests>
-                <maven-properties.file>src/main/resources/application-test.properties</maven-properties.file>
+                <maven-properties.file>src/test/resources/application-test.properties</maven-properties.file>
             </properties>
         </profile>
         <profile>
