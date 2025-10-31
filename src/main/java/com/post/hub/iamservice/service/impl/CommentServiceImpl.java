@@ -21,7 +21,6 @@ import com.post.hub.iamservice.repository.criteria.CommentSearchCriteria;
 import com.post.hub.iamservice.security.validation.AccessValidator;
 import com.post.hub.iamservice.service.CommentService;
 import com.post.hub.iamservice.utils.ApiUtils;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,7 +43,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public IamResponse<CommentDTO> createComment(@NotNull CommentRequest request) {
+    public IamResponse<CommentDTO> createComment(CommentRequest request) {
         Integer userId = apiUtils.getUserIdFromAuthentication();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
@@ -62,7 +61,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public IamResponse<CommentDTO> updateComment(@NotNull Integer commentId, UpdateCommentRequest request) {
+    public IamResponse<CommentDTO> updateComment(Integer commentId, UpdateCommentRequest request) {
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.COMMENT_NOT_FOUND_BY_ID.getMessage(commentId)));
 
@@ -84,7 +83,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public IamResponse<CommentDTO> getCommentById(@NotNull Integer commentId) {
+    public IamResponse<CommentDTO> getCommentById(Integer commentId) {
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.COMMENT_NOT_FOUND_BY_ID.getMessage(commentId)));
 
@@ -112,7 +111,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public IamResponse<PaginationResponse<CommentSearchDTO>> searchComments(@NotNull CommentSearchRequest request, Pageable pageable) {
+    public IamResponse<PaginationResponse<CommentSearchDTO>> searchComments(CommentSearchRequest request, Pageable pageable) {
         Specification<Comment> specification = new CommentSearchCriteria(request);
 
         Page<CommentSearchDTO> commentsPage = commentRepository.findAll(specification, pageable)
@@ -135,7 +134,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void softDelete(@NotNull Integer commentId) {
+    public void softDelete(Integer commentId) {
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.COMMENT_NOT_FOUND_BY_ID.getMessage(commentId)));
 

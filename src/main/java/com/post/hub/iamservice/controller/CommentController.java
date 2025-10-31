@@ -96,7 +96,7 @@ public class CommentController {
 
     @DeleteMapping("${endpoint.id}")
     @Operation(summary = "Delete a Comment", description = "Marks a comment as deleted without removing it from the database")
-    public ResponseEntity<IamResponse<CommentDTO>> deleteCommentById(
+    public ResponseEntity<Void> deleteCommentById(
             @PathVariable(name = "id") Integer commentId
     ) {
         log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());

@@ -370,7 +370,7 @@ class UserServiceTest {
         dbUser.setPassword("ENC");
         dbUser.setRoles(Set.of(admin, superAdminRole));
 
-        when(userRepository.findUserByEmail("admin@mail.com")).thenReturn(Optional.of(dbUser));
+        when(userRepository.findByEmail("admin@mail.com")).thenReturn(Optional.of(dbUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UserDetails ud = userService.loadUserByUsername("admin@mail.com");

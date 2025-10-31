@@ -23,7 +23,6 @@ import com.post.hub.iamservice.service.RefreshTokenService;
 import com.post.hub.iamservice.service.model.IamServiceUserRole;
 import com.post.hub.iamservice.utils.ApiUtils;
 import com.post.hub.iamservice.utils.PasswordUtils;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public IamResponse<UserProfileDTO> login(@NotNull LoginRequest request) {
+    public IamResponse<UserProfileDTO> login(LoginRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -88,7 +87,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public IamResponse<UserProfileDTO> registerUser(@NotNull RegistrationUserRequest request) {
+    public IamResponse<UserProfileDTO> registerUser(RegistrationUserRequest request) {
         accessValidator.validateNewUser(
                 request.getUsername(),
                 request.getEmail(),

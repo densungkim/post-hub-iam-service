@@ -20,7 +20,6 @@ import com.post.hub.iamservice.repository.criteria.PostSearchCriteria;
 import com.post.hub.iamservice.security.validation.AccessValidator;
 import com.post.hub.iamservice.service.PostService;
 import com.post.hub.iamservice.utils.ApiUtils;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public IamResponse<PostDTO> createPost(@NotNull NewPostRequest postRequest) {
+    public IamResponse<PostDTO> createPost(NewPostRequest postRequest) {
         if (postRepository.existsByTitle(postRequest.getTitle())) {
             throw new DataExistException(ApiErrorMessage.POST_ALREADY_EXISTS.getMessage(postRequest.getTitle()));
         }
@@ -62,16 +62,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public IamResponse<PostDTO> updatePost(
-            @NotNull Integer postId,
-            @NotNull UpdatePostRequest request
-    ) {
+    public IamResponse<PostDTO> updatePost(Integer postId, UpdatePostRequest request) {
         Post post = postRepository.findByIdAndDeletedFalse(postId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.POST_NOT_FOUND_BY_ID.getMessage(postId)));
 
         accessValidator.validateAdminOrOwnerAccess(post.getUser().getId());
 
-        if (postRepository.existsByTitle(request.getTitle())) {
+        if (!Objects.equals(post.getTitle(), request.getTitle()) && postRepository.existsByTitle(request.getTitle())) {
             throw new DataExistException(ApiErrorMessage.POST_ALREADY_EXISTS.getMessage(request.getTitle()));
         }
 
@@ -88,7 +85,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public IamResponse<PostDTO> getById(@NotNull Integer postId) {
+    public IamResponse<PostDTO> getById(Integer postId) {
         Post post = postRepository.findByIdAndDeletedFalse(postId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.POST_NOT_FOUND_BY_ID.getMessage(postId)));
 
