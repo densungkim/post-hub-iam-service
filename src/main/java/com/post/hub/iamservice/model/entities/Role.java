@@ -1,6 +1,6 @@
 package com.post.hub.iamservice.model.entities;
 
-import com.post.hub.iamservice.service.model.IamServiceUserRole;
+import com.post.hub.iamservice.model.enums.IamServiceUserRole;
 import com.post.hub.iamservice.utils.UserRoleTypeConverter;
 import jakarta.persistence.*;
 import lombok.Getter;

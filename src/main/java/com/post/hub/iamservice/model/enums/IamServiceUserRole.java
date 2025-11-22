@@ -1,4 +1,4 @@
-package com.post.hub.iamservice.service.model;
+package com.post.hub.iamservice.model.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

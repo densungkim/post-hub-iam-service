@@ -17,7 +17,7 @@ import com.post.hub.iamservice.repository.RoleRepository;
 import com.post.hub.iamservice.repository.UserRepository;
 import com.post.hub.iamservice.security.validation.AccessValidator;
 import com.post.hub.iamservice.service.impl.UserServiceImpl;
-import com.post.hub.iamservice.service.model.IamServiceUserRole;
+import com.post.hub.iamservice.model.enums.IamServiceUserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

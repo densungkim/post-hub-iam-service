@@ -17,14 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${endpoint.comments}")
+@RequestMapping("/comments")
 public class CommentController {
 
     private final CommentService commentService;
@@ -42,7 +40,7 @@ public class CommentController {
     }
 
 
-    @PutMapping("${endpoint.id}")
+    @PutMapping("/{id}")
     @Operation(summary = "Update a Comment", description = "Updates an existing comment")
     public ResponseEntity<IamResponse<CommentDTO>> updateComment(
             @PathVariable(name = "id") Integer commentId,
@@ -54,7 +52,7 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("${endpoint.id}")
+    @GetMapping("/{id}")
     @Operation(summary = "Get Comment by ID", description = "Fetches a comment by its unique identifier")
     public ResponseEntity<IamResponse<CommentDTO>> getCommentById(
             @PathVariable(name = "id") Integer commentId
@@ -79,7 +77,7 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("${endpoint.search}")
+    @PostMapping("/search")
     @Operation(summary = "Search Comments", description = "Search for comments using filters and pagination")
     public ResponseEntity<IamResponse<PaginationResponse<CommentSearchDTO>>> searchComments(
             @RequestBody @Valid CommentSearchRequest request,
@@ -94,7 +92,7 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("${endpoint.id}")
+    @DeleteMapping("/{id}")
     @Operation(summary = "Delete a Comment", description = "Marks a comment as deleted without removing it from the database")
     public ResponseEntity<Void> deleteCommentById(
             @PathVariable(name = "id") Integer commentId
