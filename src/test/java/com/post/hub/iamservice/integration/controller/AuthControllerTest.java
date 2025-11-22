@@ -5,13 +5,11 @@ import com.post.hub.iamservice.integration.BaseIntegrationTest;
 import com.post.hub.iamservice.model.request.user.LoginRequest;
 import com.post.hub.iamservice.model.request.user.RegistrationUserRequest;
 import com.post.hub.iamservice.model.response.IamResponse;
-import lombok.Setter;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -20,14 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @Tag("integration")
 class AuthControllerTest extends BaseIntegrationTest {
 
     @Autowired
-    @Setter
     private MockMvc mvc;
 
     private final ObjectMapper objectMapper = new ObjectMapper();

@@ -12,14 +12,12 @@ import com.post.hub.iamservice.model.request.user.UpdateUserRequest;
 import com.post.hub.iamservice.model.response.IamResponse;
 import com.post.hub.iamservice.repository.UserRepository;
 import com.post.hub.iamservice.security.JwtTokenProvider;
-import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -30,20 +28,16 @@ import java.io.IOException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @Tag("integration")
 public class UserControllerTest extends BaseIntegrationTest {
 
     @Autowired
-    @Setter
     private MockMvc mockMvc;
 
     @Autowired
-    @Setter
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    @Setter
     private UserRepository userRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
