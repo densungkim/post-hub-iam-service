@@ -1,4 +1,4 @@
-package com.post.hub.iamservice.service.model;
+package com.post.hub.iamservice.model.constants;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -12,6 +12,4 @@ public final class AuthenticationConstants {
     public static final String USER_REGISTRATION_STATUS = "userRegistrationStatus";
     public static final String LAST_UPDATE = "lastUpdate";
     public static final String ROLE = "roles";
-    public static final String ACCESS_KEY_HEADER_NAME = "key";
-
 }

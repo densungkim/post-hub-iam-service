@@ -20,7 +20,7 @@ import com.post.hub.iamservice.security.JwtTokenProvider;
 import com.post.hub.iamservice.security.validation.AccessValidator;
 import com.post.hub.iamservice.service.AuthService;
 import com.post.hub.iamservice.service.RefreshTokenService;
-import com.post.hub.iamservice.service.model.IamServiceUserRole;
+import com.post.hub.iamservice.model.enums.IamServiceUserRole;
 import com.post.hub.iamservice.utils.ApiUtils;
 import com.post.hub.iamservice.utils.PasswordUtils;
 import lombok.AllArgsConstructor;

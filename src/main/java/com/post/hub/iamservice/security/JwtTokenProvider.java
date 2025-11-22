@@ -2,7 +2,7 @@ package com.post.hub.iamservice.security;
 
 import com.post.hub.iamservice.model.entities.Role;
 import com.post.hub.iamservice.model.entities.User;
-import com.post.hub.iamservice.service.model.AuthenticationConstants;
+import com.post.hub.iamservice.model.constants.AuthenticationConstants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -116,4 +116,3 @@ public class JwtTokenProvider {
                 .compact();
     }
 }
-

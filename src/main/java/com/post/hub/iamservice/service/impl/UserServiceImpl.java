@@ -8,7 +8,7 @@ import com.post.hub.iamservice.model.dto.user.UserSearchDTO;
 import com.post.hub.iamservice.model.entities.Role;
 import com.post.hub.iamservice.model.entities.User;
 import com.post.hub.iamservice.security.validation.AccessValidator;
-import com.post.hub.iamservice.service.model.IamServiceUserRole;
+import com.post.hub.iamservice.model.enums.IamServiceUserRole;
 import com.post.hub.iamservice.model.exception.DataExistException;
 import com.post.hub.iamservice.model.exception.NotFoundException;
 import com.post.hub.iamservice.model.request.user.NewUserRequest;
