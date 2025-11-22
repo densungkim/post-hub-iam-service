@@ -20,20 +20,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
 @Slf4j
 @RestController
-@Validated
 @RequiredArgsConstructor
-@RequestMapping("${endpoint.auth}")
+@RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("${endpoint.login}")
+    @PostMapping("/login")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -53,15 +51,12 @@ public class AuthController {
 
         IamResponse<UserProfileDTO> result = authService.login(request);
 
-        String accessSetCookie = CookieUtils.accessCookie(result.getPayload().getToken(), Duration.ofMinutes(60));
-        String refreshSetCookie = CookieUtils.refreshCookie(result.getPayload().getRefreshToken(), Duration.ofDays(7));
-        response.addHeader(HttpHeaders.SET_COOKIE, accessSetCookie);
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshSetCookie);
+        addAuthCookies(result.getPayload(), response);
 
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("${endpoint.register}")
+    @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates new user and returns authentication details")
     public ResponseEntity<?> register(
             @RequestBody @Valid RegistrationUserRequest request,
@@ -71,15 +66,12 @@ public class AuthController {
 
         IamResponse<UserProfileDTO> result = authService.registerUser(request);
 
-        String accessSetCookie = CookieUtils.accessCookie(result.getPayload().getToken(), Duration.ofMinutes(60));
-        String refreshSetCookie = CookieUtils.refreshCookie(result.getPayload().getRefreshToken(), Duration.ofDays(7));
-        response.addHeader(HttpHeaders.SET_COOKIE, accessSetCookie);
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshSetCookie);
+        addAuthCookies(result.getPayload(), response);
 
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("${endpoint.refresh.token}")
+    @PostMapping("/refresh/token")
     @Operation(summary = "Refresh access token", description = "Issues a new short-lived access token")
     public ResponseEntity<IamResponse<UserProfileDTO>> refreshToken(
             @CookieValue(name = CookieUtils.REFRESH_TOKEN, required = false) String refreshToken,
@@ -89,14 +81,12 @@ public class AuthController {
 
         IamResponse<UserProfileDTO> result = authService.refreshAccessToken(refreshToken);
 
-        String accessSetCookie = CookieUtils.accessCookie(result.getPayload().getToken(), Duration.ofMinutes(60));
-        String refreshSetCookie = CookieUtils.refreshCookie(result.getPayload().getRefreshToken(), Duration.ofDays(7));
-        response.addHeader(HttpHeaders.SET_COOKIE, accessSetCookie);
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshSetCookie);
+        addAuthCookies(result.getPayload(), response);
+
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("${endpoint.password.reset}")
+    @PostMapping("/password/reset")
     @Operation(summary = "Change user password", description = "Allows authenticated user to change their password")
     public ResponseEntity<IamResponse<String>> changePassword(
             @RequestBody @Valid ChangePasswordRequest request) {
@@ -107,7 +97,7 @@ public class AuthController {
     }
 
 
-    @GetMapping("${endpoint.logout}")
+    @GetMapping("/logout")
     @Operation(summary = "Logout", description = "Logout")
     public ResponseEntity<Void> logout(HttpServletResponse response) {
         log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
@@ -116,6 +106,13 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, CookieUtils.deleteRefreshCookie());
 
         return ResponseEntity.ok().build();
+    }
+
+    private void addAuthCookies(UserProfileDTO payload, HttpServletResponse response) {
+        String accessSetCookie = CookieUtils.accessCookie(payload.getToken(), Duration.ofMinutes(60));
+        String refreshSetCookie = CookieUtils.refreshCookie(payload.getRefreshToken(), Duration.ofDays(7));
+        response.addHeader(HttpHeaders.SET_COOKIE, accessSetCookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshSetCookie);
     }
 
 }

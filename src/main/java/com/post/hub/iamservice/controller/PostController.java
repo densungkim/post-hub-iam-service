@@ -17,16 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
 @Slf4j
-@Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${endpoint.posts}")
+@RequestMapping("/posts")
 public class PostController {
 
     private final PostService postService;
@@ -43,7 +41,7 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("${endpoint.id}")
+    @PutMapping("/{id}")
     @Operation(summary = "Update a Post", description = "Updates an existing post by its ID")
     public ResponseEntity<IamResponse<PostDTO>> updatePostById(
             @PathVariable(name = "id") Integer postId,
@@ -55,7 +53,7 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("${endpoint.id}")
+    @GetMapping("/{id}")
     @Operation(summary = "Get Post by ID", description = "Retrieves a post by its unique identifier")
     public ResponseEntity<IamResponse<PostDTO>> getPostById(
             @PathVariable(name = "id") Integer postId
@@ -79,7 +77,7 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("${endpoint.search}")
+    @PostMapping("/search")
     @Operation(summary = "Search Posts", description = "Searches for posts based on filters and pagination")
     public ResponseEntity<IamResponse<PaginationResponse<PostSearchDTO>>> searchPosts(
             @RequestBody @Valid PostSearchRequest request,
@@ -93,7 +91,7 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("${endpoint.id}")
+    @DeleteMapping("/{id}")
     @Operation(summary = "Delete a Post", description = "Marks a post as deleted without removing it from the database")
     public ResponseEntity<Void> softDeletePostById(
             @PathVariable(name = "id") Integer postId

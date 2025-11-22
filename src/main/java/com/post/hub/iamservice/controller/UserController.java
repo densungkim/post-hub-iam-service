@@ -17,14 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@Validated
 @RequiredArgsConstructor
-@RequestMapping("${endpoint.users}")
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
 
@@ -39,7 +37,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("${endpoint.id}")
+    @PutMapping("/{id}")
     @Operation(summary = "Update User", description = "Updates an existing user by their ID")
     public ResponseEntity<IamResponse<UserDTO>> updateUserById(
             @PathVariable(name = "id") Integer userId,
@@ -51,7 +49,7 @@ public class UserController {
         return ResponseEntity.ok(updatedPost);
     }
 
-    @GetMapping("${endpoint.id}")
+    @GetMapping("/{id}")
     @Operation(summary = "Get User by ID", description = "Retrieves user details by their unique identifier")
     public ResponseEntity<IamResponse<UserDTO>> getUserById(
             @PathVariable(name = "id") Integer userId
@@ -75,7 +73,7 @@ public class UserController {
     }
 
 
-    @PostMapping("${endpoint.search}")
+    @PostMapping("/search")
     @Operation(summary = "Search Users", description = "Filters users based on search criteria and pagination settings")
     public ResponseEntity<IamResponse<PaginationResponse<UserSearchDTO>>> searchUsers(
             @RequestBody @Valid UserSearchRequest request,
@@ -88,7 +86,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("${endpoint.id}")
+    @DeleteMapping("/{id}")
     @Operation(summary = "Delete User", description = "Marks a user as deleted without removing them from the database")
     public ResponseEntity<Void> softDeleteUser(
             @PathVariable(name = "id") Integer userId
