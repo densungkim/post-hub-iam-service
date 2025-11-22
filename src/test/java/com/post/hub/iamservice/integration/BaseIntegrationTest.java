@@ -20,14 +20,8 @@ public abstract class BaseIntegrationTest {
 
         @Bean
         @ServiceConnection
-        PostgreSQLContainer<?> postgres() {
-            try (PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:17.6")) {
-                return container.withDatabaseName("post_hub_test")
-                        .withUsername("test_user")
-                        .withPassword("test_password");
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to start PostgreSQLContainer", e);
-            }
+        PostgreSQLContainer<?> postgresContainer() {
+            return new PostgreSQLContainer<>(DockerImageName.parse("postgres:17.6"));
         }
 
         @Bean
